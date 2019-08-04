@@ -66,7 +66,7 @@ abstract class ClientBase
                 break;
 
             case "POST":
-                curl_setopt($c, CURLOPT_POST, true);
+		curl_setopt($c, CURLOPT_CUSTOMREQUEST, 'POST');
                 if(count($data))
                 {
                     curl_setopt($c, CURLOPT_POSTFIELDS, $data);
