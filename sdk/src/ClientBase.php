@@ -6,8 +6,8 @@ abstract class ClientBase
 {
     protected $url = "https://secure.d4sign.com.br/api/";
     protected $accessToken = null;
-    protected $cryptKey = null;
-    protected $timeout = 240;
+    //protected $timeout = 240;
+    protected $timeout = 5;
     protected $version = "v1";
 
     public function setUrl($url)
@@ -24,16 +24,6 @@ abstract class ClientBase
     {
     	return $this->accessToken;
     }
-    
-    public function setCryptKey($cryptKey)
-    {
-    	$this->cryptKey = $cryptKey;
-    }
-    
-    public function getCryptKey()
-    {
-    	return $this->cryptKey;
-    }
 
     public function setTimeout($timeout)
     {
@@ -47,14 +37,23 @@ abstract class ClientBase
 
     protected function doRequest($url, $method, $data, $contentType = null)
     {
-        $c = curl_init();
-
+        // eceção pra debugar o upload
+        /*
+        if($method == 'POST') {
+            echo 'upload?';
+            print_r($data);
+            exit;
+        }
+        */
+        //return $this->client->request("/documents/$uuid_safe/upload", "POST", $data, 200);
         $header = array("Accept: application/json");
         
         array_push($header, "tokenAPI: $this->accessToken");
         
-    	$url = $this->url . $this->version . $url . "?tokenAPI=" . $this->accessToken."&cryptKey=".$this->cryptKey;
-	
+    	$url = $this->url . $this->version . $url . "?tokenAPI=" . $this->accessToken;
+
+        $c = curl_init();
+
         switch($method)
         {
             case "GET":
@@ -66,7 +65,7 @@ abstract class ClientBase
                 break;
 
             case "POST":
-		curl_setopt($c, CURLOPT_CUSTOMREQUEST, 'POST');
+                curl_setopt($c, CURLOPT_POST, true);
                 if(count($data))
                 {
                     curl_setopt($c, CURLOPT_POSTFIELDS, $data);
@@ -83,28 +82,67 @@ abstract class ClientBase
                 break;
         }
         
-        
+                
+        curl_setopt($c, CURLOPT_ENCODING, true);
+        curl_setopt($c, CURLOPT_MAXREDIRS, true);
+
         curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($c, CURLOPT_TIMEOUT, $this->timeout);
-        
+        curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
+
         curl_setopt($c, CURLOPT_HTTPHEADER, $header);
-        curl_setopt($c, CURLOPT_HEADER, true);
+        //curl_setopt($c, CURLOPT_HEADER, true);
         
         curl_setopt($c, CURLOPT_URL, $url);
-        curl_setopt($c, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+        //curl_setopt($c, CURLOPT_SSL_VERIFYHOST, false);
+        //curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
         
-        $response = curl_exec($c);
+        curl_setopt($c, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); 
+        //curl_setopt($c, CURLOPT_HTTP_VERSION, '1.1');
         
+        
+        //curl_setopt($c, CURLOPT_VERBOSE, true);
+
+        //$streamVerboseHandle = fopen('php://temp', 'w+');
+        //curl_setopt($c, CURLOPT_STDERR, $streamVerboseHandle);
+
+
+        $result = curl_exec($c);
+
+        /*
+        if($method == 'POST') {
+            echo 'upload result?';
+            print_r($result);
+            exit;
+        }
+        */
+
+        //echo 'oi' . $result;
+        //echo 'oi';
+        //exit;
+        /*
+        if ($result === FALSE) {
+            printf("cUrl error (#%d): %s<br>\n",
+                curl_errno($c),
+                htmlspecialchars(curl_error($c)))
+                ;
+        }
+
+        rewind($streamVerboseHandle);
+        $verboseLog = stream_get_contents($streamVerboseHandle);
+
+        echo "cUrl verbose information:\n", 
+        "<pre>", htmlspecialchars($verboseLog), "</pre>\n";
+        */
+
         curl_close($c);
 
-        return $response;
+        return $result;
     	
     }
 
     public function request($url, $method, $data, $expectedHttpCode, $contentType = '')
     {
-    	
         $response = $this->doRequest($url, $method, $data, $contentType);
         
         return $this->parseResponse($url, $response, $expectedHttpCode);
@@ -144,8 +182,7 @@ abstract class ClientBase
 
         if($status !== $expectedHttpCode)
         {
-            //throw new D4signException("Expected status [$expectedHttpCode], actual status [$status], URL [$url]", D4signException::INVALID_HTTP_CODE);
-        	throw new D4signException($content[0], D4signException::INVALID_HTTP_CODE);
+		throw new D4signException($content[0], D4signException::INVALID_HTTP_CODE);
         }
 
         $object = json_decode(implode("\n", $content));
