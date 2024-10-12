@@ -10,13 +10,13 @@ Via composer, encaixe os itens abaixo no seu composer.json:
 ```json
 {
   "require": {
-      "d4sign/d4sign-php": "dev-master"
+      "ruiz107/d4sign": "dev-master"
   },
   "minimum-stability": "dev",
   "repositories": [
       {
           "type": "git",
-          "url": "https://github.com/d4sign/d4sign-php"
+          "url": "https://github.com/ruiz107/d4sign"
       }
   ]
 }
@@ -33,6 +33,7 @@ require_once(__DIR__ . '/sdk/vendor/autoload.php');
 ## Configuração mínima
 
 PHP 5 >= 5.5.0
+compatível com php 8.2
 
 ## Passo a Passo
 
