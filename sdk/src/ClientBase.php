@@ -7,7 +7,7 @@ abstract class ClientBase
     protected $url = "https://secure.d4sign.com.br/api/";
     protected $accessToken = null;
     //protected $timeout = 240;
-    protected $timeout = 5;
+    protected $timeout = 30;
     protected $version = "v1";
 
     public function setUrl($url)
